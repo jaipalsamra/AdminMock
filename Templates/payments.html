@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Payments • Mock Admin{% endblock %}
+
+{% block content %}
+<section class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div>
+            <h1 class="text-2xl font-semibold">Payments</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Order payments and transaction history.</p>
+        </div>
+    </div>
+
+    {% if not selected_gr %}
+    <div class="px-6 py-10 text-gray-600 dark:text-gray-300">
+        Search and open a customer first to view their payment history.
+    </div>
+    {% elif not payments %}
+    <div class="px-6 py-10 text-gray-600 dark:text-gray-300">
+        No payment history found for this customer.
+    </div>
+    {% else %}
+
+    {% set transactions = payments.log %}
+    {% set total_amt = transactions|sum(attribute='amount') %}
+    {% set paid_transactions = transactions|selectattr('status','equalto','paid')|list %}
+    {% set pending_transactions = transactions|selectattr('status','equalto','pending')|list %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- PAYMENT AND SUMMARY -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="px-6 pt-6">
+        <div class="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <h3 class="font-medium text-blue-900 dark:text-blue-100">Payment Method</h3>
+            </div>
+            <p class="text-blue-800 dark:text-blue-200">{{ payments.method }}</p>
+        </div>
+
+        <div class="mb-4 p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ transactions|length }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Total Orders</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                        £{{ '%.2f'|format(total_amt) }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Total Charged</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {{ paid_transactions|length }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Paid Orders</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                        {{ pending_transactions|length }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Pending Transactions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- TRANSACTIONS TABLE -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="px-6 pb-6 overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="text-left text-gray-500 dark:text-gray-300">
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="py-2 pr-3">Date</th>
+                    <th class="py-2 pr-3">Order ID</th>
+                    <th class="py-2 pr-3">Amount</th>
+                    <th class="py-2 pr-3">Status</th>
+                    <th class="py-2 pr-3">Transaction ID</th>
+                    <th class="py-2"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for transaction in transactions %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                    <td class="py-3 pr-3 whitespace-nowrap">
+                        {{ transaction.date|replace('T',' ')|replace('Z','')|truncate(16, True, '') }}
+                    </td>
+                    <td class="py-3 pr-3">
+                        <div class="flex items-center gap-1">
+                            <span class="font-mono text-sm">{{ transaction.order_id }}</span>
+                            <button class="js-copy-gr ml-1 inline-flex items-center"
+                                data-text="{{ transaction.order_id }}" title="Copy order ID" aria-label="Copy order ID"
+                                type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-3 w-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-200"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="8" y="8" width="12" height="12" rx="2" ry="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <rect x="4" y="4" width="12" height="12" rx="2" ry="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="py-3 pr-3 font-medium">
+                        £{{ '%.2f'|format(transaction.amount) }}
+                    </td>
+                    <td class="py-3 pr-3">
+                        <span class="px-2 py-1 rounded text-xs font-medium capitalize
+                {% if transaction.status == 'paid' %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200
+                {% elif transaction.status == 'pending' %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200
+                {% elif transaction.status == 'failed' %} bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200
+                {% else %} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100
+                {% endif %}">
+                            {{ transaction.status }}
+                        </span>
+                    </td>
+                    <td class="py-3 pr-3">
+                        <div class="flex items-center gap-1">
+                            <span class="font-mono text-xs text-gray-600 dark:text-gray-400">{{ transaction.txn_id
+                                }}</span>
+                            <button class="js-copy-gr inline-flex items-center" data-text="{{ transaction.txn_id }}"
+                                title="Copy transaction ID" aria-label="Copy transaction ID" type="button">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-3 w-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-200"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="8" y="8" width="12" height="12" rx="2" ry="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <rect x="4" y="4" width="12" height="12" rx="2" ry="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="py-3 text-right">
+                        <a href="{{ url_for('orders_page', gr=selected_gr) }}"
+                            class="inline-block px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700 transition-colors">
+                            View Order
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% endif %}
+</section>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- FUNCTIONALITY HANDLING -->
+<!------------------------------------------------------------------------------------------------------------>
+<script>
+    // Copy functionality for order IDs and transaction IDs
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.js-copy-gr').forEach(button => {
+            button.addEventListener('click', function () {
+                const text = this.getAttribute('data-text');
+                navigator.clipboard.writeText(text).then(() => {
+                    // Simple feedback - could be enhanced with a toast notification
+                    const originalTitle = this.title;
+                    this.title = 'Copied!';
+                    setTimeout(() => {
+                        this.title = originalTitle;
+                    }, 1000);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

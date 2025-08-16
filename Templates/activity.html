@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Activity Log • Mock Admin{% endblock %}
+
+{% block content %}
+<section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-semibold">Activity Log</h1>
+        <div class="flex items-center gap-4">
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- CLEAR LOG BUTTON -->
+<!------------------------------------------------------------------------------------------------------------>
+            {% if selected_gr and activity %}
+            <button id="clear-log-btn"
+                class="px-3 py-2 rounded-md bg-red-600 text-white text-sm hover:bg-red-700 transition-colors">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Clear Log
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not selected_gr %}
+    <p class="text-gray-600 dark:text-gray-300">Search and open a customer first to view their activity.</p>
+    {% else %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- FILTERING -->
+<!------------------------------------------------------------------------------------------------------------>
+    <form method="get" class="grid gap-2 md:grid-cols-[1fr,1fr,auto] items-end mb-4">
+        <input type="hidden" name="gr" value="{{ selected_gr }}">
+        <div>
+            <label class="block text-sm mb-1">Type</label>
+            <select name="type"
+                class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-900/40 dark:border-gray-700">
+                <option value="" {{ ''==filters.type and 'selected' or '' }}>All</option>
+                {% for t in ['subscription_update','order','box','payment','account'] %}
+                <option value="{{ t }}" {{ t==filters.type and 'selected' or '' }}>{{ t|replace('_', ' ')|title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Actor</label>
+            <select name="actor"
+                class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-900/40 dark:border-gray-700">
+                <option value="" {{ ''==filters.actor and 'selected' or '' }}>All</option>
+                {% for a in ['system','agent','admin','user'] %}
+                <option value="{{ a }}" {{ a==filters.actor and 'selected' or '' }}>{{ a|capitalize }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <button class="px-4 py-2 rounded bg-blue-600 text-white w-full">Apply</button>
+        </div>
+    </form>
+
+    {% if activity %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="text-left text-gray-500 dark:text-gray-300">
+                <tr>
+                    <th class="py-2">Time</th>
+                    <th class="py-2">Actor</th>
+                    <th class="py-2">Type</th>
+                    <th class="py-2">Action</th>
+                    <th class="py-2">Detail</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for e in activity %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40 {{ 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' if e.changes else '' }}"
+                    {% if e.changes %}onclick="toggleActivityDetails('{{ loop.index0 }}')" {% endif %}>
+                    <td class="py-2">{{ e.time.replace('T',' ').replace('Z','') }}</td>
+                    <td class="py-2">
+                        <span class="px-2 py-1 rounded
+                    {% if e.actor=='system' %} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100
+                    {% elif e.actor=='agent' %} bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200
+                    {% elif e.actor=='admin' %} bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200
+                    {% else %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200
+                    {% endif %}">
+                            {{ e.actor|capitalize }}
+                        </span>
+                        {% if e.actor_id %}<span class="ml-2 text-xs text-gray-500 dark:text-gray-400">{{ e.actor_id
+                            }}</span>{% endif %}
+                    </td>
+                    <td class="py-2 capitalize">{{ e.category.replace('_', ' ') }}</td>
+                    <td class="py-2">
+                        {% if e.changes %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- EXPANDABLE DETAILS -->
+<!------------------------------------------------------------------------------------------------------------>
+
+                        {{ e.description if e.description else e.action if e.action else '-' }}
+                        <span
+                            class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+                            {{ e.changes|length }} change{{ 's' if e.changes|length > 1 else '' }}
+                        </span>
+                        <svg id="chevron-{{ loop.index0 }}"
+                            class="inline w-4 h-4 ml-1 text-gray-400 transition-transform duration-200" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                        {% else %}
+                        {% if e.description and 'Status:' in e.description %}
+                        Subscription updated
+                        {% else %}
+                        {{ e.description if e.description else e.action if e.action else '-' }}
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                    <td class="py-2">{{ e.detail if e.detail else '-' }}</td>
+                </tr>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- EXPANDING ROW -->
+<!------------------------------------------------------------------------------------------------------------>
+                {% if e.changes %}
+                <tr id="details-row-{{ loop.index0 }}" class="hidden">
+                    <td colspan="5" class="py-0">
+                        <div
+                            class="bg-gray-50 dark:bg-gray-800/50 border-l-4 border-blue-400 px-4 py-3 mx-2 mb-2 rounded-r">
+                            <div
+                                class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                Changes Made
+                            </div>
+                            <div class="space-y-2">
+                                {% for change in e.changes %}
+                                <div
+                                    class="flex items-center justify-between py-1 px-3 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
+                                    <span class="text-sm text-gray-900 dark:text-gray-100">{{ change }}</span>
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600 dark:text-gray-300">No activity for the selected filters.</p>
+    {% endif %}
+    {% endif %}
+</section>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- FUNCTIONALITY HANDLING -->
+<!------------------------------------------------------------------------------------------------------------>
+
+<script>
+    function toggleActivityDetails(index) {
+        const detailsRow = document.getElementById(`details-row-${index}`);
+        const chevron = document.getElementById(`chevron-${index}`);
+
+        if (!detailsRow) return;
+
+        const isHidden = detailsRow.classList.contains('hidden');
+
+        if (isHidden) {
+            detailsRow.classList.remove('hidden');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+        } else {
+            detailsRow.classList.add('hidden');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('table')) {
+            document.querySelectorAll('[id^="details-row-"]').forEach((row, index) => {
+                if (!row.classList.contains('hidden')) {
+                    row.classList.add('hidden');
+                    const chevron = document.getElementById(`chevron-${index}`);
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+    });
+
+    //CLEAR LOG FUNC
+    document.getElementById('clear-log-btn')?.addEventListener('click', function () {
+        if (confirm('Are you sure you want to clear all activity logs for this customer? This action cannot be undone.')) {
+            const gr = new URLSearchParams(window.location.search).get('gr');
+
+            fetch('/clear_activity_log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ gr: gr })
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        if (typeof showToast === 'function') {
+                            showToast('Activity log cleared successfully!', 'success');
+                        }
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        throw new Error(result.error || 'Failed to clear log');
+                    }
+                })
+                .catch(error => {
+                    console.error('Clear log error:', error);
+                    if (typeof showToast === 'function') {
+                        showToast('Failed to clear activity log', 'error');
+                    } else {
+                        alert('Failed to clear activity log');
+                    }
+                });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+[
+    {
+      "gr": "GR100001",
+      "method": "Visa **** 1234",
+      "log": [
+        {
+          "date": "2025-08-21T10:30:00Z",
+          "amount": 36.50,
+          "status": "paid",
+          "order_id": "ORD-2025-0821-001",
+          "txn_id": "txn_gr100001_001"
+        }
+      ]
+    },
+    {
+      "gr": "GR100002",
+      "method": "Mastercard **** 5678",
+      "log": [
+        {
+          "date": "2025-08-23T09:15:00Z",
+          "amount": 31.20,
+          "status": "paid",
+          "order_id": "ORD-2025-0823-001",
+          "txn_id": "txn_gr100002_001"
+        }
+      ]
+    },
+    {
+      "gr": "GR100003",
+      "method": "Amex **** 9012",
+      "log": [
+        {
+          "date": "2025-09-01T14:22:00Z",
+          "amount": 34.40,
+          "status": "paid",
+          "order_id": "ORD-2025-0901-001",
+          "txn_id": "txn_gr100003_001"
+        }
+      ]
+    },
+    {
+      "gr": "GR100004",
+      "method": "Visa **** 4455",
+      "log": [
+        {
+          "date": "2025-09-03T11:45:00Z",
+          "amount": 38.75,
+          "status": "paid",
+          "order_id": "ORD-2025-0903-001",
+          "txn_id": "txn_gr100004_001"
+        }
+      ]
+    },
+    {
+      "gr": "GR100005",
+      "method": "Visa **** 7788",
+      "log": [
+        {
+          "date": "2025-08-31T16:30:00Z",
+          "amount": 41.60,
+          "status": "paid",
+          "order_id": "ORD-2025-0831-001",
+          "txn_id": "txn_gr100005_001"
+        }
+      ]
+    },
+    {
+      "gr": "GR100006",
+      "method": "Apple Pay (Amex **** 3456)",
+      "log": [
+        {
+          "date": "2025-09-02T13:18:00Z",
+          "amount": 29.50,
+          "status": "paid",
+          "order_id": "ORD-2025-0902-001",
+          "txn_id": "txn_gr100006_001"
+        }
+      ]
+    },
+    {
+      "gr": "GR100007",
+      "method": "Mastercard **** 1122",
+      "log": [
+        {
+          "date": "2025-09-03T08:05:00Z",
+          "amount": 32.10,
+          "status": "paid",
+          "order_id": "ORD-2025-0903-002",
+          "txn_id": "txn_gr100007_001"
+        }
+      ]
+    }
+  ]
+  
+  

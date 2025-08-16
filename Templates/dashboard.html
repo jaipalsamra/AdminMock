@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Dashboard • Mock Admin{% endblock %}
+
+{% block content %}
+<section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <h1 class="text-xl font-semibold mb-4">Find Customer</h1>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- DROP DOWN -->
+<!------------------------------------------------------------------------------------------------------------>
+
+    <form method="get" class="grid gap-3 md:grid-cols-[160px,1fr,auto] items-end mb-6">
+        <div>
+            <label class="block text-sm mb-1">Filter</label>
+            <select name="by" class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-900/40 dark:border-gray-700">
+                <option value="" {{ ''==search.by and 'selected' or '' }}>Select…</option>
+                <option value="full_name" {{ 'full_name'==search.by and 'selected' or '' }}>First + Last name</option>
+                <option value="email" {{ 'email'==search.by and 'selected' or '' }}>Email</option>
+                <option value="phone" {{ 'phone'==search.by and 'selected' or '' }}>Phone</option>
+                <option value="postcode" {{ 'postcode'==search.by and 'selected' or '' }}>Postcode</option>
+                <option value="gr" {{ 'gr'==search.by and 'selected' or '' }}>Gousto Reference (GR)</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Query</label>
+            <input name="q" value="{{ search.q or '' }}" placeholder="e.g. GR100003 or oliver.smith@example.com"
+                class="w-full px-3 py-2 rounded border bg-white dark:bg-gray-900/40 dark:border-gray-700" />
+        </div>
+        <div>
+            <button class="px-4 py-2 rounded bg-blue-600 text-white w-full">Search</button>
+        </div>
+    </form>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- NO ACCOUNTS MESSAGE -->
+<!------------------------------------------------------------------------------------------------------------>
+
+    {% if search.by and search.q and results|length == 0 %}
+    <p class="text-gray-600 dark:text-gray-300">No accounts found for <strong>{{ search.by }}</strong> = “{{ search.q
+        }}”.</p>
+    {% endif %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- RESULT AND OVERFLOW HANDLING -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% if results and results|length > 0 %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="text-left text-gray-500 dark:text-gray-300">
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="py-2 pr-3">Name</th>
+                    <th class="py-2 pr-3">Email</th>
+                    <th class="py-2 pr-3">Phone</th>
+                    <th class="py-2 pr-3">Postcode</th>
+                    <th class="py-2 pr-3">GR</th>
+                    <th class="py-2"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for c in results %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                    <td class="py-2 pr-3">{{ c.first_name }} {{ c.last_name }}</td>
+                    <td class="py-2 pr-3">{{ c.email }}</td>
+                    <td class="py-2 pr-3">{{ c.phone }}</td>
+                    <td class="py-2 pr-3">{{ c.postcode }}</td>
+                    <td class="py-2 pr-3 font-mono">{{ c.gr }}</td>
+                    <td class="py-2 text-right">
+                        <a href="{{ url_for('orders_page', gr=c.gr) }}"
+                            class="inline-block px-3 py-1 rounded bg-blue-600 text-white text-xs">
+                            Open account
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif not (search.by and search.q) %}
+    <p class="text-gray-600 dark:text-gray-300">Enter a filter and query to search for accounts.</p>
+    {% endif %}
+</section>
+{% endblock %}

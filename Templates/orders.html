@@ -1,0 +1,769 @@
+{% extends "base.html" %}
+{% block title %}Orders • Mock Admin{% endblock %}
+{% block content %}
+<section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- CUSTOMER SELECTION CHECK -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% if not selected_gr %}
+    <p class="text-gray-600 dark:text-gray-300">Search and open a customer first to view their orders.</p>
+    {% else %}
+    {% if orders and orders|length > 0 %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- HEADER WITH GENERATE ORDER BUTTON AND SUMMARY TOGGLE -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-semibold">Orders</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="generate-order-btn" 
+                    class="px-3 py-2 rounded-md bg-green-600 text-white text-sm hover:bg-green-700 transition-colors">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Generate Order
+            </button>
+            <button id="toggle-summary"
+                class="p-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                title="Toggle summary">
+                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-700 dark:text-gray-300"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- ORDERS SUMMARY CARD -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div id="summary-card" class="mb-6 p-4 bg-gray-300/40 dark:bg-gray-900/40 rounded-lg">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ orders|length }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Orders</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-pink-600 dark:text-pink-400">
+                    {{ orders|selectattr('status', 'equalto', 'pending')|list|length }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Pending Orders</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                    £{{ '%.2f'|format(orders|sum(attribute='payment')) }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Spent</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    £{{ '%.2f'|format((orders|sum(attribute='payment')) / orders|length) }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Avg Order Value</div>
+            </div>
+        </div>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- ORDERS LIST -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="space-y-4">
+        {% for order in orders|sort(attribute='order_date', reverse=True) %}
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-3">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2 lg:mb-0">
+                    <h3 class="font-mono text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {{ order.order_id }}
+                    </h3>
+                    <span class="px-2 py-1 rounded text-xs font-medium
+                  {% if order.status == 'committed' %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200
+                  {% elif order.status == 'pending' %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200
+                  {% elif order.status == 'cancelled' %} bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200
+                  {% else %} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100
+                  {% endif %}">
+                        {{ order.status|capitalize }}
+                    </span>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-bold text-green-600 dark:text-green-400">
+                        £{{ '%.2f'|format(order.payment) }}
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ order.order_date.replace('T', ' ').replace('Z', '') if order.order_date else 'No date' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Recipes</h4>
+                    <div class="space-y-1">
+                        {% if order.recipes %}
+                        {% for recipe in order.recipes %}
+                        <div class="flex items-center text-sm">
+                            <span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                            {% if recipe.name %}
+                                {{ recipe.name }}
+                            {% else %}
+                                {{ recipe }}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-sm text-gray-500 dark:text-gray-400">No recipes listed</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Delivery Details</h4>
+                    <div class="text-sm space-y-1">
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-400">Tracking:</span>
+                            {% if order.courier_details and order.courier_details.tracking_number %}
+                                <span class="font-mono ml-1">{{ order.courier_details.tracking_number }}</span>
+                            {% else %}
+                                <span class="font-mono ml-1">{{ order.tracking_number or 'Not available' }}</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-400">Box size:</span>
+                            {% if order.box_size %}
+                                <span class="ml-1">{{ order.box_size }} {{ 'person' if order.box_size == 1 else 'people' }}</span>
+                            {% else %}
+                                <span class="ml-1 text-gray-500 dark:text-gray-400">Not specified</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="text-gray-600 dark:text-gray-400">Recipe count:</span>
+                            <span class="ml-1">{{ order.recipes|length if order.recipes else 0 }} items</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <button onclick="viewOrderDetails('{{ order.order_id }}')" 
+                        class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                    View Details
+                </button>
+                {% if (order.courier_details and order.courier_details.tracking_number) or order.tracking_number %}
+                <button class="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors">
+                    Track Package
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- EMPTY STATE - NO ORDERS -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% else %}
+    <div class="text-center py-8">
+        <p class="text-gray-600 dark:text-gray-300 mb-4">No orders found for this account.</p>
+        <button id="generate-order-btn-empty" 
+                class="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Generate First Order
+        </button>
+    </div>
+    {% endif %}
+    {% endif %}
+</section>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- GENERATE ORDER MODAL -->
+<!------------------------------------------------------------------------------------------------------------>
+<div id="generate-order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg mx-4 w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Generate New Order</h3>
+      <button onclick="closeGenerateModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="generate-order-form" class="space-y-4">
+      <!-- Delivery Date -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delivery Date</label>
+        <input type="date" id="delivery-date" name="delivery_date" required
+               class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 3 days from today</div>
+      </div>
+
+      <!-- Box Size -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Box Size</label>
+        <select id="box-size" name="box_size" required onchange="updatePricing()"
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="">Select box size</option>
+          <option value="1">1 person</option>
+          <option value="2">2 people</option>
+          <option value="3">3 people</option>
+          <option value="4">4 people</option>
+          <option value="5">5 people</option>
+        </select>
+      </div>
+
+      <!-- Number of Recipes -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of Recipes</label>
+        <select id="recipe-count" name="recipe_count" required onchange="updateRecipeSelection(); updatePricing()"
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="">Select number of recipes</option>
+          <option value="2">2 recipes</option>
+          <option value="3">3 recipes</option>
+          <option value="4">4 recipes</option>
+          <option value="5">5 recipes</option>
+        </select>
+      </div>
+
+      <!-- Recipe Selection -->
+      <div id="recipe-selection" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Recipes</label>
+        <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-md p-3">
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="honey-garlic-chicken" class="mr-2">
+              <span class="text-sm">Honey Garlic Chicken with Rice</span>
+            </label>
+          </div>
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="beef-tacos" class="mr-2">
+              <span class="text-sm">Spicy Beef Tacos with Guacamole</span>
+            </label>
+          </div>
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="salmon-teriyaki" class="mr-2">
+              <span class="text-sm">Teriyaki Salmon with Vegetables</span>
+            </label>
+          </div>
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="vegetarian-curry" class="mr-2">
+              <span class="text-sm">Coconut Vegetarian Curry</span>
+            </label>
+          </div>
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="pasta-carbonara" class="mr-2">
+              <span class="text-sm">Classic Pasta Carbonara</span>
+            </label>
+          </div>
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="thai-green-curry" class="mr-2">
+              <span class="text-sm">Thai Green Curry with Chicken</span>
+            </label>
+          </div>
+          <div class="recipe-option">
+            <label class="flex items-center">
+              <input type="checkbox" name="selected_recipes" value="mushroom-risotto" class="mr-2">
+              <span class="text-sm">Creamy Mushroom Risotto</span>
+            </label>
+          </div>
+        </div>
+        <div id="recipe-count-warning" class="text-xs text-red-600 dark:text-red-400 mt-1 hidden">
+          Please select exactly <span id="required-count">0</span> recipe(s)
+        </div>
+      </div>
+
+      <!-- Pricing Display -->
+      <div id="pricing-display" class="hidden bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+        <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Order Summary</div>
+        <div class="text-xs space-y-1">
+          <div class="flex justify-between">
+            <span>Box size:</span>
+            <span id="summary-box-size">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Recipes:</span>
+            <span id="summary-recipes">-</span>
+          </div>
+          <div class="flex justify-between font-medium text-base">
+            <span>Total:</span>
+            <span id="summary-total">£0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex gap-3 justify-end pt-4">
+        <button type="button" onclick="closeGenerateModal()" 
+                class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+        <button type="submit" id="generate-submit-btn"
+                class="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Generate Order
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- ORDER DETAILS MODAL -->
+<!------------------------------------------------------------------------------------------------------------>
+<div id="order-details-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl mx-4 w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Order Details</h3>
+      <button onclick="closeOrderDetailsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div id="order-details-content">
+      <!-- Content will be populated by JavaScript -->
+    </div>
+    
+    <div id="order-actions" class="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+      <!-- Actions will be populated by JavaScript -->
+    </div>
+  </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- DATA SCRIPTS - SEPARATE FROM MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script type="application/json" id="orders-data">
+{% if orders %}{{ orders|tojson|safe }}{% else %}[]{% endif %}
+</script>
+
+<script type="application/json" id="customer-data">
+{% if customer_info %}{{ customer_info|tojson|safe }}{% else %}null{% endif %}
+</script>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script>
+// Summary Toggle Script
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('toggle-summary');
+    const card = document.getElementById('summary-card');
+    const eyeIcon = document.getElementById('eye-icon');
+
+    const collapsed = localStorage.getItem('orders_summary_hidden') === 'true';
+    if (collapsed) {
+        card.classList.add('hidden');
+        setEyeCrossed(true);
+    }
+
+    btn.addEventListener('click', () => {
+        const isHidden = card.classList.toggle('hidden');
+        localStorage.setItem('orders_summary_hidden', isHidden ? 'true' : 'false');
+        setEyeCrossed(isHidden);
+    });
+
+    function setEyeCrossed(hidden) {
+        if (hidden) {
+            eyeIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.06 10.06 0 012.222-3.592M6.18 6.18A9.977 9.977 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.956 9.956 0 01-4.224 5.178M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      `;
+        } else {
+            eyeIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      `;
+        }
+    }
+});
+
+// Data Loading Section
+let ordersData = [];
+let customerInfo = null;
+let currentOrderId = null;
+
+try {
+    const ordersScript = document.getElementById('orders-data');
+    if (ordersScript && ordersScript.textContent.trim()) {
+        ordersData = JSON.parse(ordersScript.textContent);
+    }
+} catch (e) {
+    console.error('Error loading orders data:', e);
+    ordersData = [];
+}
+
+try {
+    const customerScript = document.getElementById('customer-data');
+    if (customerScript && customerScript.textContent.trim()) {
+        customerInfo = JSON.parse(customerScript.textContent);
+    }
+} catch (e) {
+    console.error('Error loading customer info:', e);
+    customerInfo = null;
+}
+
+// Order Details Functions
+function viewOrderDetails(orderId) {
+    console.log('viewOrderDetails called with:', orderId);
+    console.log('ordersData:', ordersData);
+    
+    const order = ordersData.find(o => o.order_id === orderId);
+    console.log('Found order:', order);
+    
+    if (!order) {
+        console.error('Order not found for ID:', orderId);
+        return;
+    }
+    
+    currentOrderId = orderId;
+    const modal = document.getElementById('order-details-modal');
+    const content = document.getElementById('order-details-content');
+    const actions = document.getElementById('order-actions');
+    
+    if (!modal || !content || !actions) {
+        console.error('Required modal elements not found');
+        return;
+    }
+    
+    // Format delivery date
+    const deliveryDate = order.order_date ? order.order_date.replace('T', ' ').replace('Z', '') : 'Not specified';
+    
+    // Build recipes list
+    let recipesList = '';
+    if (order.recipes && order.recipes.length > 0) {
+        recipesList = order.recipes.map(recipe => {
+            const recipeName = recipe.name || recipe;
+            return `<div class="flex items-center text-sm mb-1">
+                <span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                ${recipeName}
+            </div>`;
+        }).join('');
+    } else {
+        recipesList = '<p class="text-sm text-gray-500 dark:text-gray-400">No recipes listed</p>';
+    }
+    
+    // Determine status styling
+    let statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+    if (order.status === 'committed') {
+        statusClass = 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200';
+    } else if (order.status === 'pending') {
+        statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200';
+    } else if (order.status === 'cancelled') {
+        statusClass = 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
+    }
+    
+    // Build content
+    content.innerHTML = `
+        <div class="space-y-4">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-mono text-lg font-semibold text-blue-600 dark:text-blue-400">${order.order_id}</h4>
+                    <span class="px-2 py-1 rounded text-xs font-medium ${statusClass}">
+                        ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
+                </div>
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400">£${(order.payment || 0).toFixed(2)}</div>
+            </div>
+
+            <div>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Delivery Information</h4>
+                <div class="text-sm space-y-1">
+                    <div><span class="text-gray-600 dark:text-gray-400">Date:</span> <span class="ml-1">${deliveryDate}</span></div>
+                    ${customerInfo ? `<div><span class="text-gray-600 dark:text-gray-400">Address:</span> <span class="ml-1">${customerInfo.name}, ${customerInfo.postcode}</span></div>` : ''}
+                    ${order.box_size ? `<div><span class="text-gray-600 dark:text-gray-400">Box size:</span> <span class="ml-1">${order.box_size} ${order.box_size === 1 ? 'person' : 'people'}</span></div>` : ''}
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Recipes (${order.recipes ? order.recipes.length : 0} items)</h4>
+                <div class="max-h-32 overflow-y-auto">
+                    ${recipesList}
+                </div>
+            </div>
+
+            ${order.status === 'committed' ? `
+            <div>
+                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-2">Tracking Information</h4>
+                <div class="text-sm">
+                    <div><span class="text-gray-600 dark:text-gray-400">Tracking Number:</span> 
+                        <span class="font-mono ml-1">${(order.courier_details && order.courier_details.tracking_number) || order.tracking_number || 'Not available'}</span>
+                    </div>
+                    ${order.courier_details && order.courier_details.company ? `<div><span class="text-gray-600 dark:text-gray-400">Courier:</span> <span class="ml-1">${order.courier_details.company}</span></div>` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    // Build actions based on order status
+    if (order.status === 'pending') {
+        actions.innerHTML = `
+            <button onclick="closeOrderDetailsModal()" 
+                    class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Close
+            </button>
+            <button onclick="cancelOrder('${order.order_id}')" 
+                    class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">
+                Cancel Order
+            </button>
+        `;
+    } else {
+        actions.innerHTML = `
+            <button onclick="closeOrderDetailsModal()" 
+                    class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                Close
+            </button>
+        `;
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeOrderDetailsModal() {
+    document.getElementById('order-details-modal').classList.add('hidden');
+    currentOrderId = null;
+}
+
+function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch('/cancel_order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            if (typeof showToast === 'function') {
+                showToast('Order cancelled successfully!', 'success');
+            }
+            closeOrderDetailsModal();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            throw new Error(result.error || 'Failed to cancel order');
+        }
+    })
+    .catch(error => {
+        console.error('Cancel order error:', error);
+        if (typeof showToast === 'function') {
+            showToast('Failed to cancel order', 'error');
+        } else {
+            alert('Failed to cancel order');
+        }
+    });
+}
+
+// Recipe Data for Order Generation
+const recipeData = {
+    'honey-garlic-chicken': { name: 'Honey Garlic Chicken with Rice', basePrice: 6.99 },
+    'beef-tacos': { name: 'Spicy Beef Tacos with Guacamole', basePrice: 7.49 },
+    'salmon-teriyaki': { name: 'Teriyaki Salmon with Vegetables', basePrice: 8.99 },
+    'vegetarian-curry': { name: 'Coconut Vegetarian Curry', basePrice: 5.99 },
+    'pasta-carbonara': { name: 'Classic Pasta Carbonara', basePrice: 6.49 },
+    'thai-green-curry': { name: 'Thai Green Curry with Chicken', basePrice: 7.99 },
+    'mushroom-risotto': { name: 'Creamy Mushroom Risotto', basePrice: 6.99 }
+};
+
+// Order Generation Modal Functions
+function setMinimumDate() {
+    const today = new Date();
+    const minDate = new Date(today.getTime() + (3 * 24 * 60 * 60 * 1000));
+    const dateString = minDate.toISOString().split('T')[0];
+    const dateInput = document.getElementById('delivery-date');
+    if (dateInput) {
+        dateInput.min = dateString;
+        dateInput.value = dateString;
+    }
+}
+
+function openGenerateModal() {
+    const modal = document.getElementById('generate-order-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        setMinimumDate();
+    }
+}
+
+function closeGenerateModal() {
+    const modal = document.getElementById('generate-order-modal');
+    const form = document.getElementById('generate-order-form');
+    const recipeSelection = document.getElementById('recipe-selection');
+    const pricingDisplay = document.getElementById('pricing-display');
+    
+    if (modal) modal.classList.add('hidden');
+    if (form) form.reset();
+    if (recipeSelection) recipeSelection.classList.add('hidden');
+    if (pricingDisplay) pricingDisplay.classList.add('hidden');
+}
+
+// Recipe Selection and Validation Functions
+function updateRecipeSelection() {
+    const recipeCountSelect = document.getElementById('recipe-count');
+    const recipeSelection = document.getElementById('recipe-selection');
+    const requiredCount = document.getElementById('required-count');
+    
+    if (!recipeCountSelect || !recipeSelection) return;
+    
+    const recipeCount = parseInt(recipeCountSelect.value);
+    
+    if (recipeCount > 0) {
+        recipeSelection.classList.remove('hidden');
+        if (requiredCount) requiredCount.textContent = recipeCount;
+        
+        document.querySelectorAll('input[name="selected_recipes"]').forEach(cb => {
+            cb.checked = false;
+            cb.addEventListener('change', validateRecipeSelection);
+        });
+    } else {
+        recipeSelection.classList.add('hidden');
+    }
+}
+
+function validateRecipeSelection() {
+    const recipeCountSelect = document.getElementById('recipe-count');
+    const warning = document.getElementById('recipe-count-warning');
+    
+    if (!recipeCountSelect) return false;
+    
+    const recipeCount = parseInt(recipeCountSelect.value);
+    const selectedRecipes = document.querySelectorAll('input[name="selected_recipes"]:checked');
+    
+    if (selectedRecipes.length !== recipeCount) {
+        if (warning) warning.classList.remove('hidden');
+        return false;
+    } else {
+        if (warning) warning.classList.add('hidden');
+        updatePricing();
+        return true;
+    }
+}
+
+// Pricing Display Functions
+function updatePricing() {
+    const boxSizeSelect = document.getElementById('box-size');
+    const recipeCountSelect = document.getElementById('recipe-count');
+    const pricingDisplay = document.getElementById('pricing-display');
+    const summaryBoxSize = document.getElementById('summary-box-size');
+    const summaryRecipes = document.getElementById('summary-recipes');
+    const summaryTotal = document.getElementById('summary-total');
+    
+    if (!boxSizeSelect || !recipeCountSelect) return;
+    
+    const boxSize = parseInt(boxSizeSelect.value);
+    const recipeCount = parseInt(recipeCountSelect.value);
+    const selectedRecipes = document.querySelectorAll('input[name="selected_recipes"]:checked');
+    
+    if (boxSize && recipeCount && selectedRecipes.length === recipeCount) {
+        let totalPrice = 0;
+        
+        selectedRecipes.forEach(recipe => {
+            const recipePrice = recipeData[recipe.value].basePrice;
+            totalPrice += recipePrice * boxSize;
+        });
+        
+        if (summaryBoxSize) summaryBoxSize.textContent = `${boxSize} people`;
+        if (summaryRecipes) summaryRecipes.textContent = `${recipeCount} recipes`;
+        if (summaryTotal) summaryTotal.textContent = `£${totalPrice.toFixed(2)}`;
+        if (pricingDisplay) pricingDisplay.classList.remove('hidden');
+    } else {
+        if (pricingDisplay) pricingDisplay.classList.add('hidden');
+    }
+}
+
+// Event Listeners and Form Handlers
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generate-order-btn');
+    const generateBtnEmpty = document.getElementById('generate-order-btn-empty');
+    const generateForm = document.getElementById('generate-order-form');
+    
+    if (generateBtn) generateBtn.addEventListener('click', openGenerateModal);
+    if (generateBtnEmpty) generateBtnEmpty.addEventListener('click', openGenerateModal);
+    
+    // Order Generation Form Handler
+    if (generateForm) {
+        generateForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateRecipeSelection()) {
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const selectedRecipes = Array.from(document.querySelectorAll('input[name="selected_recipes"]:checked'))
+                .map(cb => ({
+                    id: cb.value,
+                    name: recipeData[cb.value].name
+                }));
+            
+            const orderData = {
+                gr: new URLSearchParams(window.location.search).get('gr'),
+                delivery_date: formData.get('delivery_date'),
+                box_size: parseInt(formData.get('box_size')),
+                recipes: selectedRecipes
+            };
+            
+            const submitBtn = document.getElementById('generate-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Generating...';
+            }
+            
+            fetch('/generate_order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    if (typeof showToast === 'function') {
+                        showToast('Order generated successfully!', 'success');
+                    }
+                    closeGenerateModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.error || 'Failed to generate order');
+                }
+            })
+            .catch(error => {
+                console.error('Generate order error:', error);
+                if (typeof showToast === 'function') {
+                    showToast('Failed to generate order', 'error');
+                } else {
+                    alert('Failed to generate order');
+                }
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Generate Order';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

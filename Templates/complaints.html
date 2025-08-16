@@ -1,0 +1,764 @@
+{% extends "base.html" %}
+{% block title %}Complaint Log • Mock Admin{% endblock %}
+{% block content %}
+<section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- HEADER WITH CREATE COMPLAINT BUTTON -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-semibold">Complaint Log</h1>
+        <div class="flex items-center gap-4">
+            {% if selected_gr %}
+            {% if complaint_rows and complaint_rows|length > 0 %}
+            <button id="toggle-complaints-summary"
+                class="p-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                title="Toggle summary">
+                <svg id="complaints-eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-700 dark:text-gray-300"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            </button>
+            {% endif %}
+            <button id="create-complaint-btn" 
+                    class="px-3 py-2 rounded-md bg-red-600 text-white text-sm hover:bg-red-700 transition-colors">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Create Complaint
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- COMPLAINTS SUMMARY CARD -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% if selected_gr and complaint_rows and complaint_rows|length > 0 %}
+    <div id="complaints-summary-card" class="mb-6 p-4 bg-gray-300/40 dark:bg-gray-900/40 rounded-lg">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold text-red-600 dark:text-red-400">
+                    {{ complaint_rows|length }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Complaints</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    {{ complaint_rows|selectattr('status', 'equalto', 'open')|list|length }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Open Complaints</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    £{{ '%.2f'|format(complaint_rows|selectattr('compensation_type', 'equalto', 'credit')|selectattr('compensation', 'defined')|sum(attribute='compensation')) }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Credits</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                    £{{ '%.2f'|format(complaint_rows|selectattr('compensation_type', 'equalto', 'refund')|selectattr('compensation', 'defined')|sum(attribute='compensation')) }}
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Refunds</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- COMPLAINTS TABLE AND DATA DISPLAY -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% if not selected_gr %}
+    <p class="text-gray-600 dark:text-gray-300">Search and open a customer first to view their complaints.</p>
+    {% else %}
+    {% if complaint_rows and complaint_rows|length > 0 %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="text-left text-gray-500 dark:text-gray-300">
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="py-2 pr-3">Date</th>
+                    <th class="py-2 pr-3">Order</th>
+                    <th class="py-2 pr-3">Recipe</th>
+                    <th class="py-2 pr-3">Issue</th>
+                    <th class="py-2 pr-3">Type</th>
+                    <th class="py-2 pr-3">Compensation</th>
+                    <th class="py-2 pr-3">Status</th>
+                    <th class="py-2"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for c in complaint_rows|sort(attribute='date', reverse=True) %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                    <td class="py-2 pr-3 whitespace-nowrap">
+                        {{ c.date.replace('T',' ').replace('Z','') if c.date else 'No date' }}
+                    </td>
+                    <td class="py-2 pr-3 font-mono">{{ c.order_id or 'N/A' }}</td>
+                    <td class="py-2 pr-3">{{ c.recipe or 'N/A' }}</td>
+                    <td class="py-2 pr-3">{{ c.issue or 'No description' }}</td>
+                    <td class="py-2 pr-3">
+                        <span class="px-2 py-1 rounded text-xs font-medium
+                        {% if c.compensation_type == 'credit' %} bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200
+                        {% elif c.compensation_type == 'refund' %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200
+                        {% else %} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100
+                        {% endif %}">
+                            {{ c.compensation_type or 'none' }}
+                        </span>
+                    </td>
+                    <td class="py-2 pr-3 font-medium">
+                        £{{ '%.2f'|format(c.compensation if c.compensation is not none else 0) }}
+                    </td>
+                    <td class="py-2 pr-3">
+                        <span class="px-2 py-1 rounded capitalize text-xs font-medium
+                    {% if c.status == 'resolved' %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200
+                    {% elif c.status == 'open' %} bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200
+                    {% else %} bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100
+                    {% endif %}">
+                            {{ c.status or 'unknown' }}
+                        </span>
+                    </td>
+                    <td class="py-2 text-right">
+                        <div class="flex gap-1 justify-end">
+                            <button onclick="editComplaint('{{ c.complaint_id }}')" 
+                                    class="px-2 py-1 rounded bg-gray-600 text-white text-xs hover:bg-gray-700 transition-colors">
+                                Edit
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="border-t border-gray-200 dark:border-gray-700">
+                <tr>
+                    <td class="py-3 pr-3 text-right text-gray-600 dark:text-gray-300" colspan="5">Total compensation</td>
+                    <td class="py-3 pr-3 font-semibold">
+                        £{{ '%.2f'|format(complaint_rows|selectattr('compensation', 'defined')|sum(attribute='compensation')) }}
+                    </td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- EMPTY STATE - NO COMPLAINTS -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% else %}
+    <div class="text-center py-8">
+        <p class="text-gray-600 dark:text-gray-300 mb-4">No complaints found for this account.</p>
+        <button id="create-complaint-btn-empty" 
+                class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Create First Complaint
+        </button>
+    </div>
+    {% endif %}
+    {% endif %}
+</section>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- CREATE COMPLAINT MODAL -->
+<!------------------------------------------------------------------------------------------------------------>
+<div id="create-complaint-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg mx-4 w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Create Complaint</h3>
+      <button onclick="closeComplaintModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="create-complaint-form" class="space-y-4">
+      <!-- Order Selection -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Order</label>
+        <select id="complaint-order" name="order_id" required onchange="updateRecipeOptions()"
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="">Select a committed order</option>
+        </select>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Only committed orders are available</div>
+      </div>
+
+      <!-- Recipe Selection -->
+      <div id="recipe-selection-section" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Recipe *</label>
+        <select id="complaint-recipe" name="recipe" required
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="">Select the recipe with the issue</option>
+        </select>
+      </div>
+
+      <!-- Issue Description -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Description *</label>
+        <textarea id="complaint-description" name="description" required rows="3" placeholder="Describe the issue with the recipe..."
+                  class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 resize-none"></textarea>
+      </div>
+
+      <!-- Compensation Type -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Compensation Type *</label>
+        <select id="compensation-type" name="compensation_type" required onchange="updateCompensationAmount()"
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="">Select compensation type</option>
+          <option value="credit">Account Credit</option>
+          <option value="refund">Refund</option>
+        </select>
+      </div>
+
+      <!-- Compensation Amount -->
+      <div id="compensation-amount-section" class="hidden">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Compensation Amount *</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">£</span>
+          <input type="number" id="compensation-amount" name="compensation_amount" step="0.01" min="0" required
+                 class="w-full pl-7 pr-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex gap-3 justify-end pt-4">
+        <button type="button" onclick="closeComplaintModal()" 
+                class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+        <button type="submit" id="complaint-submit-btn"
+                class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Create Complaint
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- EDIT COMPLAINT MODAL -->
+<!------------------------------------------------------------------------------------------------------------>
+<div id="edit-complaint-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg mx-4 w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Complaint</h3>
+      <button onclick="closeEditComplaintModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="edit-complaint-form" class="space-y-4">
+      <input type="hidden" id="edit-complaint-id" name="complaint_id">
+      
+      <!-- Read-Only Order Information -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order ID</label>
+        <input type="text" id="edit-order-id" readonly
+               class="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+      </div>
+
+      <!-- Read-Only Recipe Information -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Recipe</label>
+        <input type="text" id="edit-recipe" readonly
+               class="w-full px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400">
+      </div>
+
+      <!-- Editable Issue Description -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issue Description *</label>
+        <textarea id="edit-complaint-description" name="description" required rows="3"
+                  class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 resize-none"></textarea>
+      </div>
+
+      <!-- Editable Compensation Type -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Compensation Type *</label>
+        <select id="edit-compensation-type" name="compensation_type" required
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="">Select compensation type</option>
+          <option value="credit">Account Credit</option>
+          <option value="refund">Refund</option>
+        </select>
+      </div>
+
+      <!-- Editable Compensation Amount -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Compensation Amount *</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">£</span>
+          <input type="number" id="edit-compensation-amount" name="compensation_amount" step="0.01" min="0" required
+                 class="w-full pl-7 pr-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+      </div>
+
+      <!-- Editable Status -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+        <select id="edit-status" name="status" required
+                class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          <option value="open">Open</option>
+          <option value="resolved">Resolved</option>
+        </select>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex gap-3 justify-between pt-4">
+        <button type="button" onclick="deleteComplaint()" 
+                class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">
+          Delete Complaint
+        </button>
+        <div class="flex gap-3">
+          <button type="button" onclick="closeEditComplaintModal()" 
+                  class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+            Cancel
+          </button>
+          <button type="submit" id="edit-complaint-submit-btn"
+                  class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            Update Complaint
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- DATA SCRIPTS - SEPARATE FROM MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script type="application/json" id="orders-data">
+{% if orders %}{{ orders|tojson|safe }}{% else %}[]{% endif %}
+</script>
+
+<script type="application/json" id="customer-data">
+{% if customer_info %}{{ customer_info|tojson|safe }}{% else %}null{% endif %}
+</script>
+
+<script type="application/json" id="complaints-data">
+{% if complaint_rows %}{{ complaint_rows|tojson|safe }}{% else %}[]{% endif %}
+</script>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script>
+// Data Loading Section
+let ordersData = [];
+let customerInfo = null;
+let complaintsData = [];
+
+try {
+    const ordersScript = document.getElementById('orders-data');
+    if (ordersScript && ordersScript.textContent.trim()) {
+        ordersData = JSON.parse(ordersScript.textContent);
+    }
+} catch (e) {
+    console.error('Error loading orders data:', e);
+    ordersData = [];
+}
+
+try {
+    const customerScript = document.getElementById('customer-data');
+    if (customerScript && customerScript.textContent.trim()) {
+        customerInfo = JSON.parse(customerScript.textContent);
+    }
+} catch (e) {
+    console.error('Error loading customer info:', e);
+    customerInfo = null;
+}
+
+try {
+    const complaintsScript = document.getElementById('complaints-data');
+    if (complaintsScript && complaintsScript.textContent.trim()) {
+        complaintsData = JSON.parse(complaintsScript.textContent);
+    }
+} catch (e) {
+    console.error('Error loading complaints data:', e);
+    complaintsData = [];
+}
+
+// Recipe Data - Kept for potential future use
+const recipeData = {
+    'honey-garlic-chicken': { name: 'Honey Garlic Chicken with Rice', basePrice: 6.99 },
+    'beef-tacos': { name: 'Spicy Beef Tacos with Guacamole', basePrice: 7.49 },
+    'salmon-teriyaki': { name: 'Teriyaki Salmon with Vegetables', basePrice: 8.99 },
+    'vegetarian-curry': { name: 'Coconut Vegetarian Curry', basePrice: 5.99 },
+    'pasta-carbonara': { name: 'Classic Pasta Carbonara', basePrice: 6.49 },
+    'thai-green-curry': { name: 'Thai Green Curry with Chicken', basePrice: 7.99 },
+    'mushroom-risotto': { name: 'Creamy Mushroom Risotto', basePrice: 6.99 }
+};
+
+// Modal Management Functions
+function openComplaintModal() {
+    const modal = document.getElementById('create-complaint-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        populateOrderOptions();
+    }
+}
+
+function closeComplaintModal() {
+    const modal = document.getElementById('create-complaint-modal');
+    const form = document.getElementById('create-complaint-form');
+    const recipeSection = document.getElementById('recipe-selection-section');
+    const compensationSection = document.getElementById('compensation-amount-section');
+    
+    if (modal) modal.classList.add('hidden');
+    if (form) form.reset();
+    if (recipeSection) recipeSection.classList.add('hidden');
+    if (compensationSection) compensationSection.classList.add('hidden');
+}
+
+// Order and Recipe Population Functions
+function populateOrderOptions() {
+    const orderSelect = document.getElementById('complaint-order');
+    if (!orderSelect) return;
+    
+    orderSelect.innerHTML = '<option value="">Select a committed order</option>';
+    
+    const committedOrders = ordersData.filter(order => order.status === 'committed');
+    
+    if (committedOrders.length === 0) {
+        orderSelect.innerHTML = '<option value="">No committed orders available</option>';
+        orderSelect.disabled = true;
+        return;
+    }
+    
+    committedOrders.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+    
+    committedOrders.forEach(order => {
+        const option = document.createElement('option');
+        option.value = order.order_id;
+        const orderDate = order.order_date ? order.order_date.replace('T', ' ').replace('Z', '') : 'No date';
+        option.textContent = `${order.order_id} - ${orderDate} (£${order.payment.toFixed(2)})`;
+        option.dataset.orderData = JSON.stringify(order);
+        orderSelect.appendChild(option);
+    });
+}
+
+function updateRecipeOptions() {
+    const orderSelect = document.getElementById('complaint-order');
+    const recipeSelect = document.getElementById('complaint-recipe');
+    const recipeSection = document.getElementById('recipe-selection-section');
+    
+    if (!orderSelect || !recipeSelect || !recipeSection) return;
+    
+    const selectedOrderId = orderSelect.value;
+    if (!selectedOrderId) {
+        recipeSection.classList.add('hidden');
+        return;
+    }
+    
+    const selectedOrder = ordersData.find(order => order.order_id === selectedOrderId);
+    if (!selectedOrder || !selectedOrder.recipes) {
+        recipeSection.classList.add('hidden');
+        return;
+    }
+    
+    recipeSelect.innerHTML = '<option value="">Select the recipe with the issue</option>';
+    
+    selectedOrder.recipes.forEach(recipe => {
+        const option = document.createElement('option');
+        const recipeName = recipe.name || recipe;
+        option.value = recipeName;
+        option.textContent = recipeName;
+        recipeSelect.appendChild(option);
+    });
+    
+    recipeSection.classList.remove('hidden');
+}
+
+function updateCompensationAmount() {
+    const compensationTypeSelect = document.getElementById('compensation-type');
+    const compensationSection = document.getElementById('compensation-amount-section');
+    
+    if (!compensationTypeSelect || !compensationSection) return;
+    
+    const selectedType = compensationTypeSelect.value;
+    if (!selectedType) {
+        compensationSection.classList.add('hidden');
+        return;
+    }
+    
+    compensationSection.classList.remove('hidden');
+}
+
+// Form Validation Functions
+function validateComplaintForm() {
+    const orderSelect = document.getElementById('complaint-order');
+    const recipeSelect = document.getElementById('complaint-recipe');
+    const description = document.getElementById('complaint-description');
+    const compensationType = document.getElementById('compensation-type');
+    const compensationAmount = document.getElementById('compensation-amount');
+    
+    let isValid = true;
+    let errors = [];
+    
+    if (!orderSelect || !orderSelect.value) {
+        errors.push('Please select an order');
+        isValid = false;
+    }
+    
+    if (!recipeSelect || !recipeSelect.value) {
+        errors.push('Please select a recipe');
+        isValid = false;
+    }
+    
+    if (!description || !description.value.trim()) {
+        errors.push('Please provide an issue description');
+        isValid = false;
+    }
+    
+    if (!compensationType || !compensationType.value) {
+        errors.push('Please select a compensation type');
+        isValid = false;
+    }
+    
+    if (compensationType && compensationType.value && (!compensationAmount || !compensationAmount.value || parseFloat(compensationAmount.value) <= 0)) {
+        errors.push('Please provide a valid compensation amount');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        alert('Please fix the following errors:\n• ' + errors.join('\n• '));
+    }
+    
+    return isValid;
+}
+
+// Edit Complaint Functions
+function editComplaint(complaintId) {
+    const complaint = complaintsData.find(c => c.complaint_id === complaintId);
+    if (!complaint) {
+        console.error('Complaint not found:', complaintId);
+        return;
+    }
+    
+    document.getElementById('edit-complaint-id').value = complaint.complaint_id;
+    document.getElementById('edit-order-id').value = complaint.order_id;
+    document.getElementById('edit-recipe').value = complaint.recipe;
+    document.getElementById('edit-complaint-description').value = complaint.issue || '';
+    document.getElementById('edit-compensation-type').value = complaint.compensation_type || '';
+    document.getElementById('edit-compensation-amount').value = complaint.compensation || '';
+    document.getElementById('edit-status').value = complaint.status || 'open';
+    
+    document.getElementById('edit-complaint-modal').classList.remove('hidden');
+}
+
+function closeEditComplaintModal() {
+    const modal = document.getElementById('edit-complaint-modal');
+    const form = document.getElementById('edit-complaint-form');
+    
+    if (modal) modal.classList.add('hidden');
+    if (form) form.reset();
+}
+
+function deleteComplaint() {
+    const complaintId = document.getElementById('edit-complaint-id').value;
+    
+    if (!confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch('/delete_complaint', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            complaint_id: complaintId,
+            gr: new URLSearchParams(window.location.search).get('gr')
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            if (typeof showToast === 'function') {
+                showToast('Complaint deleted successfully!', 'success');
+            }
+            closeEditComplaintModal();
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            throw new Error(result.error || 'Failed to delete complaint');
+        }
+    })
+    .catch(error => {
+        console.error('Delete complaint error:', error);
+        if (typeof showToast === 'function') {
+            showToast('Failed to delete complaint', 'error');
+        } else {
+            alert('Failed to delete complaint');
+        }
+    });
+}
+
+// Event Listeners and Form Handlers
+document.addEventListener('DOMContentLoaded', function() {
+    // Summary Toggle Script
+    const summaryBtn = document.getElementById('toggle-complaints-summary');
+    const summaryCard = document.getElementById('complaints-summary-card');
+    const eyeIcon = document.getElementById('complaints-eye-icon');
+
+    if (summaryBtn && summaryCard && eyeIcon) {
+        const collapsed = localStorage.getItem('complaints_summary_hidden') === 'true';
+        if (collapsed) {
+            summaryCard.classList.add('hidden');
+            setComplaintsEyeCrossed(true);
+        }
+
+        summaryBtn.addEventListener('click', () => {
+            const isHidden = summaryCard.classList.toggle('hidden');
+            localStorage.setItem('complaints_summary_hidden', isHidden ? 'true' : 'false');
+            setComplaintsEyeCrossed(isHidden);
+        });
+
+        function setComplaintsEyeCrossed(hidden) {
+            if (hidden) {
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a10.06 10.06 0 012.222-3.592M6.18 6.18A9.977 9.977 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.956 9.956 0 01-4.224 5.178M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                `;
+            } else {
+                eyeIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                `;
+            }
+        }
+    }
+
+    const createBtn = document.getElementById('create-complaint-btn');
+    const createBtnEmpty = document.getElementById('create-complaint-btn-empty');
+    const createForm = document.getElementById('create-complaint-form');
+    
+    if (createBtn) createBtn.addEventListener('click', openComplaintModal);
+    if (createBtnEmpty) createBtnEmpty.addEventListener('click', openComplaintModal);
+    
+    // Create Complaint Form Handler
+    if (createForm) {
+        createForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateComplaintForm()) {
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const complaintData = {
+                gr: new URLSearchParams(window.location.search).get('gr'),
+                order_id: formData.get('order_id'),
+                recipe: formData.get('recipe'),
+                description: formData.get('description'),
+                compensation_type: formData.get('compensation_type'),
+                compensation_amount: parseFloat(formData.get('compensation_amount'))
+            };
+            
+            const submitBtn = document.getElementById('complaint-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating...';
+            }
+            
+            fetch('/create_complaint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(complaintData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    if (typeof showToast === 'function') {
+                        showToast('Complaint created successfully!', 'success');
+                    }
+                    closeComplaintModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.error || 'Failed to create complaint');
+                }
+            })
+            .catch(error => {
+                console.error('Create complaint error:', error);
+                if (typeof showToast === 'function') {
+                    showToast('Failed to create complaint', 'error');
+                } else {
+                    alert('Failed to create complaint');
+                }
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Complaint';
+                }
+            });
+        });
+    }
+    
+    // Edit Complaint Form Handler
+    const editForm = document.getElementById('edit-complaint-form');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const updateData = {
+                complaint_id: formData.get('complaint_id'),
+                gr: new URLSearchParams(window.location.search).get('gr'),
+                description: formData.get('description'),
+                compensation_type: formData.get('compensation_type'),
+                compensation_amount: parseFloat(formData.get('compensation_amount')),
+                status: formData.get('status')
+            };
+            
+            const submitBtn = document.getElementById('edit-complaint-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Updating...';
+            }
+            
+            fetch('/update_complaint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    if (typeof showToast === 'function') {
+                        showToast('Complaint updated successfully!', 'success');
+                    }
+                    closeEditComplaintModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.error || 'Failed to update complaint');
+                }
+            })
+            .catch(error => {
+                console.error('Update complaint error:', error);
+                if (typeof showToast === 'function') {
+                    showToast('Failed to update complaint', 'error');
+                } else {
+                    alert('Failed to update complaint');
+                }
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Update Complaint';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

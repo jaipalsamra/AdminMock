@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Message Log • Mock Admin{% endblock %}
+
+{% block content %}
+<section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-semibold">Message Log</h1>
+  </div>
+
+  {% if not selected_gr %}
+  <p class="text-gray-600 dark:text-gray-300">Search and open a customer first to view their messages.</p>
+  {% else %}
+  {% if not messages or not messages.log %}
+  <div class="px-6 py-10 text-amber-700 dark:text-amber-300">No messages found for this account.</div>
+  {% else %}
+
+  <!------------------------------------------------------------------------------------------------------------>
+  <!-- MESSAGE COUNT -->
+  <!------------------------------------------------------------------------------------------------------------>
+  <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+    {{ messages.log|length }} message{{ 's' if messages.log|length != 1 else '' }} found
+  </div>
+
+  <!------------------------------------------------------------------------------------------------------------>
+  <!-- MESSAGE TABLE -->
+  <!------------------------------------------------------------------------------------------------------------>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="text-left text-gray-500 dark:text-gray-300">
+        <tr>
+          <th class="py-2">Date</th>
+          <th class="py-2">Type</th>
+          <th class="py-2">Subject</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        {% for message in messages.log|sort(attribute='date', reverse=True) %}
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+          <td class="py-2">{{ message.date }}</td>
+          <td class="py-2">
+            <span class="px-2 py-1 rounded
+                    {% if message.type == 'Recipe Reminder' %} bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200
+                    {% elif message.type == 'Order Confirmation' %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200
+                    {% elif message.type == 'Promo' %} bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200
+                    {% else %} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100
+                    {% endif %}">
+              {{ message.type }}
+            </span>
+          </td>
+          <td class="py-2">{{ message.subject }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

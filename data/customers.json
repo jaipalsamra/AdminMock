@@ -1,0 +1,72 @@
+[
+  {
+    "gr": "GR100001",
+    "first_name": "Oliver",
+    "last_name": "Smith",
+    "email": "oliver.smith@example.com",
+    "phone": "07123 456789",
+    "address": "12 High Street",
+    "city": "London",
+    "postcode": "SW1A 1AA"
+  },
+  {
+    "gr": "GR100002",
+    "first_name": "Amelia",
+    "last_name": "Johnson",
+    "email": "amelia.johnson@example.com",
+    "phone": "07234 567890",
+    "address": "45 Green Lane",
+    "city": "Birmingham",
+    "postcode": "B1 1BB"
+  },
+  {
+    "gr": "GR100003",
+    "first_name": "George",
+    "last_name": "Williams",
+    "email": "george.williams@example.com",
+    "phone": "07345 678901",
+    "address": "8 Rosewood Close",
+    "city": "Manchester",
+    "postcode": "M1 2AB"
+  },
+  {
+    "gr": "GR100004",
+    "first_name": "Sophia",
+    "last_name": "Brown",
+    "email": "sophia.brown@example.com",
+    "phone": "07456 789012",
+    "address": "27 Meadow View",
+    "city": "Leeds",
+    "postcode": "LS1 3CD"
+  },
+  {
+    "gr": "GR100005",
+    "first_name": "James",
+    "last_name": "Taylor",
+    "email": "james.taylor@example.com",
+    "phone": "07567 890123",
+    "address": "3 Oak Avenue",
+    "city": "Bristol",
+    "postcode": "BS1 4RT"
+  },
+  {
+    "gr": "GR100006",
+    "first_name": "Isla",
+    "last_name": "Davies",
+    "email": "isla.davies@example.com",
+    "phone": "07678 901234",
+    "address": "59 Kings Road",
+    "city": "Liverpool",
+    "postcode": "L1 8JK"
+  },
+  {
+    "gr": "GR100007",
+    "first_name": "Henry",
+    "last_name": "Evans",
+    "email": "henry.evans@example.com",
+    "phone": "07789 012345",
+    "address": "101 Station Street",
+    "city": "Newcastle",
+    "postcode": "NE1 5GH"
+  }
+]

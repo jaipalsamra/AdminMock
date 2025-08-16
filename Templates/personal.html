@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% block title %}Personal • Mock Admin{% endblock %}
+
+{% block content %}
+<section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- PAGE HEADER WITH EDIT BUTTON -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-semibold">Personal</h1>
+        {% if selected_gr and customer %}
+        <button id="edit-personal-btn" 
+                class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit Details
+        </button>
+        {% endif %}
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- CUSTOMER SELECTION CHECK -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% if not selected_gr %}
+    <p class="text-gray-600 dark:text-gray-300">Search and open a customer first to view their personal details.</p>
+    {% else %}
+    {% if not customer %}
+    <p class="text-amber-700 dark:text-amber-300">This account could not be loaded. Try re-opening from the dashboard.</p>
+    {% else %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- ADDRESS DATA EXTRACTION -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% set addr = customer.address if (customer and customer.address is defined) else '' %}
+    {% set city = customer.city if (customer and customer.city is defined) else '' %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- PERSONAL DETAILS DISPLAY -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div id="personal-details-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+
+        <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Full Name</div>
+            <div class="font-medium">{{ customer.first_name or '' }} {{ customer.last_name or '' }}</div>
+        </div>
+
+        <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Email</div>
+            <a href="mailto:{{ customer.email or '' }}" class="font-medium text-blue-700 dark:text-blue-400 hover:underline">
+                {{ customer.email or '' }}
+            </a>
+        </div>
+
+        <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Phone</div>
+            <a href="tel:{{ (customer.phone or '') | replace(' ', '') }}" class="font-medium hover:underline">
+                {{ customer.phone or '' }}
+            </a>
+        </div>
+
+        <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Gousto Reference (GR)</div>
+            <div class="flex items-start gap-1">
+                <span class="font-mono font-medium">{{ customer.gr or '' }}</span>
+            </div>
+        </div>
+
+        <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Postcode</div>
+            <div class="font-medium">{{ customer.postcode or '' }}</div>
+        </div>
+
+        {% if addr %}
+        <div class="p-4 rounded-lg bg-gray-200 dark:bg-gray-900/40">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Address</div>
+            <div class="font-medium leading-relaxed text-gray-900 dark:text-gray-100">
+                {{ addr }}{% if city %}<br>{{ city }}{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+    {% endif %}
+</section>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- EDIT PERSONAL DETAILS MODAL -->
+<!------------------------------------------------------------------------------------------------------------>
+<div id="edit-personal-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl mx-4 w-full max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Personal Details</h3>
+      <button onclick="closeEditPersonalModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="edit-personal-form" class="space-y-4">
+      <input type="hidden" id="edit-gr" name="gr" value="{{ customer.gr if customer else '' }}">
+      
+      <!-- Name Fields -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name *</label>
+          <input type="text" id="edit-first-name" name="first_name" required
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name *</label>
+          <input type="text" id="edit-last-name" name="last_name" required
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
+          <input type="email" id="edit-email" name="email" required
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone *</label>
+          <input type="tel" id="edit-phone" name="phone" required
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+      </div>
+
+      <!-- Postcode (separate field) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Postcode *</label>
+          <input type="text" id="edit-postcode" name="postcode" required
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+      </div>
+
+      <!-- Address Fields -->
+      <div class="space-y-4">
+        <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">Address</h4>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address Line 1</label>
+          <input type="text" id="edit-address-line1" name="address_line1"
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+          <input type="text" id="edit-city" name="city"
+                 class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex gap-3 justify-end pt-4">
+        <button type="button" onclick="closeEditPersonalModal()" 
+                class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+          Cancel
+        </button>
+        <button type="submit" id="personal-submit-btn"
+                class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- DATA SCRIPTS - SEPARATE FROM MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script type="application/json" id="customer-data">
+{% if customer %}{{ customer|tojson|safe }}{% else %}null{% endif %}
+</script>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script>
+// Data Loading Section
+let customerData = null;
+
+try {
+    const customerScript = document.getElementById('customer-data');
+    if (customerScript && customerScript.textContent.trim()) {
+        customerData = JSON.parse(customerScript.textContent);
+    }
+} catch (e) {
+    console.error('Error loading customer data:', e);
+    customerData = null;
+}
+
+// Modal Management Functions
+function openEditPersonalModal() {
+    const modal = document.getElementById('edit-personal-modal');
+    if (modal && customerData) {
+        populateEditForm();
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeEditPersonalModal() {
+    const modal = document.getElementById('edit-personal-modal');
+    const form = document.getElementById('edit-personal-form');
+    
+    if (modal) modal.classList.add('hidden');
+    if (form) form.reset();
+}
+
+// Form Population Function
+function populateEditForm() {
+    if (!customerData) return;
+    
+    // Basic fields
+    document.getElementById('edit-gr').value = customerData.gr || '';
+    document.getElementById('edit-first-name').value = customerData.first_name || '';
+    document.getElementById('edit-last-name').value = customerData.last_name || '';
+    document.getElementById('edit-email').value = customerData.email || '';
+    document.getElementById('edit-phone').value = customerData.phone || '';
+    document.getElementById('edit-postcode').value = customerData.postcode || '';
+    
+    // Address fields - now simple with separate address and city fields
+    document.getElementById('edit-address-line1').value = customerData.address || '';
+    document.getElementById('edit-city').value = customerData.city || '';
+}
+
+// Display Update Functions
+function updatePersonalDisplay(updatedData) {
+    // Update the display cards with new data
+    const detailsView = document.getElementById('personal-details-view');
+    if (!detailsView || !updatedData) return;
+    
+    // Update name
+    const nameCard = detailsView.children[0];
+    if (nameCard) {
+        const nameDiv = nameCard.querySelector('.font-medium');
+        if (nameDiv) nameDiv.textContent = `${updatedData.first_name} ${updatedData.last_name}`;
+    }
+    
+    // Update email
+    const emailCard = detailsView.children[1];
+    if (emailCard) {
+        const emailLink = emailCard.querySelector('a');
+        if (emailLink) {
+            emailLink.href = `mailto:${updatedData.email}`;
+            emailLink.textContent = updatedData.email;
+        }
+    }
+    
+    // Update phone
+    const phoneCard = detailsView.children[2];
+    if (phoneCard) {
+        const phoneLink = phoneCard.querySelector('a');
+        if (phoneLink) {
+            phoneLink.href = `tel:${updatedData.phone.replace(/\s/g, '')}`;
+            phoneLink.textContent = updatedData.phone;
+        }
+    }
+    
+    // Update postcode
+    const postcodeCard = detailsView.children[4];
+    if (postcodeCard) {
+        const postcodeDiv = postcodeCard.querySelector('.font-medium');
+        if (postcodeDiv) postcodeDiv.textContent = updatedData.postcode;
+    }
+    
+    // Update address if it exists
+    if (detailsView.children.length > 5) {
+        const addressCard = detailsView.children[5];
+        const addressDiv = addressCard.querySelector('.font-medium.leading-relaxed');
+        if (addressDiv) {
+            let addressHtml = '';
+            if (updatedData.address) {
+                addressHtml += updatedData.address;
+                if (updatedData.city) {
+                    addressHtml += `<br>${updatedData.city}`;
+                }
+            }
+            addressDiv.innerHTML = addressHtml;
+        }
+    }
+}
+
+// Event Listeners and Form Handlers
+document.addEventListener('DOMContentLoaded', function() {
+    const editBtn = document.getElementById('edit-personal-btn');
+    const editForm = document.getElementById('edit-personal-form');
+    
+    if (editBtn) editBtn.addEventListener('click', openEditPersonalModal);
+    
+    // Personal Details Form Handler
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const personalData = {
+                gr: formData.get('gr'),
+                first_name: formData.get('first_name'),
+                last_name: formData.get('last_name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                postcode: formData.get('postcode'),
+                address: formData.get('address_line1'),
+                city: formData.get('city')
+            };
+            
+            const submitBtn = document.getElementById('personal-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+            }
+            
+            fetch('/update_personal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(personalData)
+            })
+            .then(response => {
+                // Handle both success and error responses
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        // Server returned an error status (400, 500, etc.)
+                        throw new Error(data.error || `Server error: ${response.status}`);
+                    }
+                    return data;
+                });
+            })
+            .then(result => {
+                if (result.success) {
+                    if (typeof showToast === 'function') {
+                        showToast('Personal details updated successfully!', 'success');
+                    }
+                    
+                    // Update local customer data
+                    customerData = { ...customerData, ...result.customer };
+                    
+                    // Update the display
+                    updatePersonalDisplay(result.customer);
+                    
+                    closeEditPersonalModal();
+                } else {
+                    throw new Error(result.error || 'Failed to update personal details');
+                }
+            })
+            .catch(error => {
+                console.error('Update personal details error:', error);
+                
+                // Get the actual error message
+                let errorMessage = error.message || 'Failed to update personal details';
+                
+                if (typeof showToast === 'function') {
+                    showToast(errorMessage, 'error');
+                } else {
+                    alert(errorMessage);
+                }
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Save Changes';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

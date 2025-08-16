@@ -1,0 +1,116 @@
+[
+  {
+    "gr": "GR100001",
+    "order_id": "ORD-10001-01",
+    "complaint_id": "C-1001",
+    "date": "2025-08-15T14:10:00Z",
+    "issue": "Missing ingredient in Beef Lasagne recipe box",
+    "compensation": 5.0,
+    "status": "resolved",
+    "compensation_type": "credit",
+    "recipe": "Beef Lasagne"
+  },
+  {
+    "gr": "GR100001",
+    "order_id": "ORD-10001-02",
+    "complaint_id": "C-1002",
+    "date": "2025-08-22T10:25:00Z",
+    "issue": "Chicken was spoiled upon delivery",
+    "compensation": 10.0,
+    "status": "open",
+    "compensation_type": "refund",
+    "recipe": "Chicken Katsu Curry"
+  },
+  {
+    "gr": "GR100002",
+    "order_id": "ORD-10002-01",
+    "complaint_id": "C-1003",
+    "date": "2025-08-17T09:45:00Z",
+    "issue": "Pesto pasta recipe card missing",
+    "compensation": 2.0,
+    "status": "resolved",
+    "compensation_type": "credit",
+    "recipe": "Pesto Pasta"
+  },
+  {
+    "gr": "GR100003",
+    "order_id": "ORD-10003-02",
+    "complaint_id": "C-1004",
+    "date": "2025-08-26T15:05:00Z",
+    "issue": "Butter chicken sauce packet burst in box",
+    "compensation": 4.5,
+    "status": "open",
+    "compensation_type": "refund",
+    "recipe": "Butter Chicken"
+  },
+  {
+    "gr": "GR100003",
+    "order_id": "ORD-10003-03",
+    "complaint_id": "C-1005",
+    "date": "2025-09-03T11:15:00Z",
+    "issue": "Wrong recipe included (Falafel Wrap replaced with Tuna Salad)",
+    "compensation": 3.0,
+    "status": "resolved",
+    "compensation_type": "credit",
+    "recipe": "Falafel Wrap"
+  },
+  {
+    "gr": "GR100004",
+    "order_id": "ORD-10004-02",
+    "complaint_id": "C-1006",
+    "date": "2025-08-23T13:30:00Z",
+    "issue": "Veggie stir fry vegetables were wilted",
+    "compensation": 4.0,
+    "status": "resolved",
+    "compensation_type": "refund",
+    "recipe": "Veggie Stir Fry"
+  },
+  {
+    "gr": "GR100005",
+    "order_id": "ORD-10005-01",
+    "complaint_id": "C-1007",
+    "date": "2025-08-20T12:00:00Z",
+    "issue": "Delivery delayed by 2 days",
+    "compensation": 7.5,
+    "status": "open",
+    "compensation_type": "refund",
+    "recipe": "Lemon Garlic Chicken",
+    "modified_date": "2025-08-14T21:15:07Z",
+    "modified_by": "admin"
+  },
+  {
+    "gr": "GR100005",
+    "order_id": "ORD-10005-03",
+    "complaint_id": "C-1008",
+    "date": "2025-09-04T09:20:00Z",
+    "issue": "Steak not vacuum sealed properly",
+    "compensation": 6.0,
+    "status": "resolved",
+    "compensation_type": "credit",
+    "recipe": "Steak and Chips",
+    "modified_date": "2025-08-14T21:15:00Z",
+    "modified_by": "admin"
+  },
+  {
+    "gr": "GR100006",
+    "order_id": "ORD-10006-02",
+    "complaint_id": "C-1009",
+    "date": "2025-08-25T14:00:00Z",
+    "issue": "Chicken shawarma wrap missing sauce",
+    "compensation": 2.5,
+    "status": "resolved",
+    "compensation_type": "credit",
+    "recipe": "Chicken Shawarma Wrap"
+  },
+  {
+    "gr": "GR100007",
+    "order_id": "ORD-10007-01",
+    "complaint_id": "C-1010",
+    "date": "2025-08-21T16:30:00Z",
+    "issue": "Spaghetti pasta packet split open in box",
+    "compensation": 3.5,
+    "status": "resolved",
+    "compensation_type": "refund",
+    "recipe": "Spaghetti Bolognese"
+  }
+]

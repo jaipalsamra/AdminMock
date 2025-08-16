@@ -1,0 +1,41 @@
+[
+    { "gr": "GR100001", "log": [
+      { "date": "2025-08-11", "type": "Recipe Reminder", "subject": "Don’t forget to pick your recipes" },
+      { "date": "2025-08-14", "type": "Order Confirmation", "subject": "Your Gousto box has been confirmed" },
+      { "date": "2025-08-18", "type": "Promo", "subject": "New dishes this week!" }
+    ]},
+    { "gr": "GR100002", "log": [
+      { "date": "2025-08-13", "type": "Recipe Reminder", "subject": "Choose your recipes by cut-off" },
+      { "date": "2025-08-16", "type": "Order Confirmation", "subject": "Your order is set" },
+      { "date": "2025-08-21", "type": "Promo", "subject": "Free dessert on selected boxes" }
+    ]},
+    { "gr": "GR100003", "log": [
+      { "date": "2025-08-15", "type": "Recipe Reminder", "subject": "Recipes are closing soon" },
+      { "date": "2025-08-18", "type": "Order Confirmation", "subject": "Your Gousto box is confirmed" },
+      { "date": "2025-08-25", "type": "Order Confirmation", "subject": "Your Gousto box is confirmed" },
+      { "date": "2025-08-28", "type": "Promo", "subject": "Try our new veggie picks" }
+    ]},
+    { "gr": "GR100004", "log": [
+      { "date": "2025-08-10", "type": "Promo", "subject": "10% off for loyal customers" },
+      { "date": "2025-08-13", "type": "Order Confirmation", "subject": "Your order is confirmed" },
+      { "date": "2025-08-20", "type": "Order Confirmation", "subject": "Your order is confirmed" },
+      { "date": "2025-08-27", "type": "Order Confirmation", "subject": "Your order is confirmed" }
+    ]},
+    { "gr": "GR100005", "log": [
+      { "date": "2025-08-13", "type": "Recipe Reminder", "subject": "Pick your recipes now" },
+      { "date": "2025-08-17", "type": "Order Confirmation", "subject": "Your order is confirmed" },
+      { "date": "2025-08-24", "type": "Order Confirmation", "subject": "Your order is confirmed" }
+    ]},
+    { "gr": "GR100006", "log": [
+      { "date": "2025-08-16", "type": "Recipe Reminder", "subject": "Select your dishes" },
+      { "date": "2025-08-19", "type": "Order Confirmation", "subject": "Your order is confirmed" },
+      { "date": "2025-08-26", "type": "Order Confirmation", "subject": "Your order is confirmed" }
+    ]},
+    { "gr": "GR100007", "log": [
+      { "date": "2025-08-17", "type": "Recipe Reminder", "subject": "Recipes close soon" },
+      { "date": "2025-08-20", "type": "Order Confirmation", "subject": "Your order is confirmed" },
+      { "date": "2025-08-27", "type": "Order Confirmation", "subject": "Your order is confirmed" }
+    ]}
+  ]
+  
+  

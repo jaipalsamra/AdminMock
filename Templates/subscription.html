@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% block title %}Subscription • Mock Admin{% endblock %}
+
+{% block content %}
+<section class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- PAGE HEADER -->
+<!------------------------------------------------------------------------------------------------------------>
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div>
+            <h1 class="text-2xl font-semibold">Subscription</h1>
+        </div>
+    </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- CUSTOMER SELECTION CHECK -->
+<!------------------------------------------------------------------------------------------------------------>
+    {% if not selected_gr %}
+    <div class="px-6 py-10 text-gray-600 dark:text-gray-300">Search and open a customer first to view their subscription.</div>
+    {% else %}
+    {% if not subscription %}
+    <div class="px-6 py-10 text-amber-700 dark:text-amber-300">No subscription data found for this account.</div>
+    {% else %}
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- SUBSCRIPTION SETTINGS FORM -->
+<!------------------------------------------------------------------------------------------------------------>
+    <form id="subscription-form" class="px-6 py-6 space-y-8" method="post" action="{{ url_for('update_subscription') }}">
+        <input type="hidden" name="gr" value="{{ selected_gr }}">
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- STATUS AND FREQUENCY SECTION -->
+<!------------------------------------------------------------------------------------------------------------>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Status -->
+            <div>
+                <label class="block text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Status</label>
+                <select id="status-select" name="status"
+                    class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                    {% set s = subscription.status|lower %}
+                    <option value="active" {{ 'active'==s and 'selected' or '' }}>Active</option>
+                    <option value="paused" {{ 'paused'==s and 'selected' or '' }}>Paused</option>
+                    <option value="cancelled" {{ 'cancelled'==s and 'selected' or '' }}>Cancelled</option>
+                </select>
+            </div>
+
+            <!-- Frequency -->
+            <div>
+                <label class="block text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Frequency</label>
+                <select name="frequency"
+                    class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                    <option value="weekly" {{ subscription.frequency=='weekly' and 'selected' or '' }}>Weekly</option>
+                    <option value="fortnightly" {{ subscription.frequency=='fortnightly' and 'selected' or '' }}>Fortnightly</option>
+                    <option value="monthly" {{ subscription.frequency=='monthly' and 'selected' or '' }}>Monthly</option>
+                </select>
+            </div>
+        </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- RECIPES AND BOX SIZE SECTION -->
+<!------------------------------------------------------------------------------------------------------------>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Recipes per box -->
+            <div>
+                <label class="block text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Recipes per box</label>
+                <input name="recipes" type="number" min="2" max="5" value="{{ subscription.recipes }}"
+                    class="w-32 px-3 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+            </div>
+
+            <!-- Box size -->
+            <div>
+                <label class="block text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Box size (people)</label>
+                <input name="box_size" type="number" min="1" max="5" value="{{ subscription.box_size }}"
+                    class="w-32 px-3 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+            </div>
+        </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- DELIVERY DAY SECTION -->
+<!------------------------------------------------------------------------------------------------------------>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400 mb-1">Delivery day</label>
+                <select name="delivery_day"
+                    class="w-full px-3 py-2 rounded-md bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                    {% for d in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                    <option value="{{ d|lower }}" {{ subscription.delivery_day==d and 'selected' or '' }}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- FORM ACTIONS SECTION -->
+<!------------------------------------------------------------------------------------------------------------>
+        <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <p class="text-xs text-gray-600 dark:text-gray-400">Orders become <span class="font-medium">committed</span>
+                at midday, 3 days before delivery.</p>
+            <div class="flex items-center gap-2">
+                <!-- Restore button - only shows when subscription is cancelled -->
+                <button type="button" id="restore-btn"
+                    class="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 {{ 'hidden' if subscription.status|lower != 'cancelled' else '' }}">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Restore Subscription
+                </button>
+                <button type="button" id="cancel-btn"
+                    class="px-3 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700">
+                    Reset
+                </button>
+                <button type="submit" id="save-btn"
+                    class="px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                    Save changes
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% endif %}
+    {% endif %}
+</section>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- CANCELLATION CONFIRMATION MODAL -->
+<!------------------------------------------------------------------------------------------------------------>
+<div id="cancel-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cancel Subscription</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
+            </div>
+        </div>
+        <p class="text-gray-700 dark:text-gray-300 mb-6">
+            Are you sure you want to cancel this customer's subscription? They will no longer receive meal boxes and
+            this change will be immediate.
+        </p>
+        <div class="flex gap-3 justify-end">
+            <button type="button" id="cancel-modal-no"
+                class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Keep Active
+            </button>
+            <button type="button" id="cancel-modal-yes"
+                class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">
+                Cancel Subscription
+            </button>
+        </div>
+    </div>
+</div>
+
+<!------------------------------------------------------------------------------------------------------------>
+<!-- MAIN JAVASCRIPT -->
+<!------------------------------------------------------------------------------------------------------------>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Element References
+        const statusSelect = document.getElementById('status-select');
+        const form = document.getElementById('subscription-form');
+        const modal = document.getElementById('cancel-modal');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const restoreBtn = document.getElementById('restore-btn');
+
+        // State Variables
+        let originalValues = {};
+        let pendingCancellation = false;
+
+        // Store Original Form Values
+        const formElements = form.querySelectorAll('input, select');
+        formElements.forEach(field => {
+            if (field.name) {
+                originalValues[field.name] = field.value;
+            }
+        });
+
+        // Status Change Handler
+        statusSelect?.addEventListener('change', function () {
+            const originalStatus = originalValues['status']?.toLowerCase() || 'active';
+
+            if (originalStatus === 'cancelled' && this.value !== 'cancelled') {
+                this.value = 'cancelled';
+                if (typeof showToast === 'function') {
+                    showToast('Please use the Restore button to reactivate this subscription', 'warning');
+                }
+                return;
+            }
+
+            if (this.value === 'cancelled' && originalStatus !== 'cancelled') {
+                modal.classList.remove('hidden');
+                pendingCancellation = true;
+            }
+        });
+
+        // Modal Event Handlers
+        document.getElementById('cancel-modal-no')?.addEventListener('click', function () {
+            statusSelect.value = originalValues['status'] || 'active';
+            modal.classList.add('hidden');
+            pendingCancellation = false;
+        });
+
+        document.getElementById('cancel-modal-yes')?.addEventListener('click', function () {
+            modal.classList.add('hidden');
+            pendingCancellation = false;
+            if (typeof showToast === 'function') {
+                showToast('Subscription will be cancelled when saved', 'warning');
+            }
+        });
+
+        // Restore Button Handler
+        restoreBtn?.addEventListener('click', function () {
+            statusSelect.value = 'active';
+            originalValues['status'] = 'active';
+            restoreBtn.classList.add('hidden');
+
+            if (typeof showToast === 'function') {
+                showToast('Subscription restored to Active - click Save to confirm', 'success');
+            }
+
+            updateStatusPill('active');
+            pendingCancellation = false;
+        });
+
+        // Reset Button Handler
+        cancelBtn?.addEventListener('click', function () {
+            formElements.forEach(field => {
+                if (field.name && originalValues[field.name] !== undefined) {
+                    field.value = originalValues[field.name];
+                }
+            });
+
+            const originalStatus = originalValues['status']?.toLowerCase();
+            if (originalStatus === 'cancelled') {
+                restoreBtn?.classList.remove('hidden');
+            } else {
+                restoreBtn?.classList.add('hidden');
+            }
+
+            if (originalValues['status']) {
+                updateStatusPill(originalValues['status']);
+            }
+
+            pendingCancellation = false;
+            if (typeof showToast === 'function') {
+                showToast('Changes reset', 'info');
+            }
+        });
+
+        // Form Submission Handler
+        form?.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        formElements.forEach(field => {
+                            if (field.name) {
+                                originalValues[field.name] = field.value;
+                            }
+                        });
+
+                        if (typeof showToast === 'function') {
+                            showToast('Subscription updated successfully!', 'success');
+                        }
+
+                        updateStatusPill(data.status);
+
+                        const newStatus = data.status?.toLowerCase();
+                        if (newStatus === 'cancelled') {
+                            restoreBtn?.classList.remove('hidden');
+                        } else {
+                            restoreBtn?.classList.add('hidden');
+                        }
+
+                    } else {
+                        throw new Error(result.error || 'Save failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Save error:', error);
+                    if (typeof showToast === 'function') {
+                        showToast('Failed to save changes', 'error');
+                    }
+                })
+                .finally(() => {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save changes';
+                });
+        });
+
+        // Status Pill Update Function
+        function updateStatusPill(newStatus) {
+            const customerInfoSection = document.querySelector('.max-w-5xl.mx-auto.-mt-2.mb-4');
+            const statusPill = customerInfoSection?.querySelector('span.inline-flex.items-center');
+
+            if (statusPill) {
+                statusPill.className = statusPill.className.replace(/bg-\w+-\d+|text-\w+-\d+/g, '');
+
+                const s = newStatus.toLowerCase();
+                let pillClasses = 'inline-flex items-center px-2 py-0.5 rounded-full ';
+                if (s === 'active') {
+                    pillClasses += 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
+                } else if (s === 'paused') {
+                    pillClasses += 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+                } else if (s === 'cancelled') {
+                    pillClasses += 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
+                } else {
+                    pillClasses += 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+                }
+
+                statusPill.className = pillClasses;
+                statusPill.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
+            }
+        }
+
+        // Copy to Clipboard Functionality
+        document.querySelectorAll('.js-copy-gr').forEach(button => {
+            button.addEventListener('click', function () {
+                const text = this.getAttribute('data-text');
+                const copyType = this.getAttribute('data-copy-type') || 'text';
+
+                navigator.clipboard.writeText(text).then(() => {
+                    if (typeof showToast === 'function') {
+                        showToast(`${copyType} copied!`, 'success');
+                    } else if (typeof toast === 'function') {
+                        toast(`${copyType} copied!`);
+                    } else {
+                        const originalTitle = this.title;
+                        this.title = `${copyType} copied!`;
+                        setTimeout(() => {
+                            this.title = originalTitle;
+                        }, 2000);
+                    }
+                }).catch(() => {
+                    if (typeof showToast === 'function') {
+                        showToast('Failed to copy', 'error');
+                    } else if (typeof toast === 'function') {
+                        toast('Failed to copy');
+                    } else {
+                        console.error('Failed to copy to clipboard');
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+[
+  {
+    "gr": "GR100001",
+    "status": "Active",
+    "frequency": "weekly",
+    "recipes": 4,
+    "box_size": 2,
+    "delivery_day": "Thursday"
+  },
+  {
+    "gr": "GR100002",
+    "status": "Active",
+    "frequency": "fortnightly",
+    "recipes": 3,
+    "box_size": 3,
+    "delivery_day": "Saturday"
+  },
+  {
+    "gr": "GR100003",
+    "status": "Active",
+    "frequency": "monthly",
+    "recipes": 5,
+    "box_size": 4,
+    "delivery_day": "Monday"
+  },
+  {
+    "gr": "GR100004",
+    "status": "paused",
+    "frequency": "weekly",
+    "recipes": 2,
+    "box_size": 1,
+    "delivery_day": "monday"
+  },
+  {
+    "gr": "GR100005",
+    "status": "Active",
+    "frequency": "fortnightly",
+    "recipes": 5,
+    "box_size": 5,
+    "delivery_day": "Sunday"
+  },
+  {
+    "gr": "GR100006",
+    "status": "Active",
+    "frequency": "monthly",
+    "recipes": 3,
+    "box_size": 2,
+    "delivery_day": "Tuesday"
+  },
+  {
+    "gr": "GR100007",
+    "status": "active",
+    "frequency": "monthly",
+    "recipes": 4,
+    "box_size": 4,
+    "delivery_day": "monday"
+  }
+]
